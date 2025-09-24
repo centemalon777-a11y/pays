@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnHub - Student Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* General Styles */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#0ea5e9,#8b5cf6);color:#fff;}
+
+/* Header & Nav */
+header{display:flex;justify-content:space-between;align-items:center;padding:15px 10%;background:rgba(0,0,0,0.3);}
+.logo{font-size:1.5rem;font-weight:700;}
+nav ul{display:flex;list-style:none;gap:20px;}
+nav a{text-decoration:none;color:#fff;font-weight:600;transition:0.3s;}
+nav a:hover{color:#38bdf8;}
+
+/* Sections */
+.section{display:none;padding:20px;background:#1e293b;border-radius:12px;margin:20px 10%;min-height:150px;}
+.section.active{display:block;}
+.section h2{margin-bottom:15px;}
+.section .list-item{padding:10px;background:rgba(255,255,255,0.1);margin-bottom:10px;border-radius:8px;}
+
+/* Buttons */
+button{cursor:pointer;border:none;border-radius:8px;padding:8px 12px;background:#0ea5e9;color:#fff;font-weight:600;transition:0.3s;}
+button:hover{background:#38bdf8;}
+
+/* Welcome Message */
+#welcome-msg{text-align:center;font-size:1.8rem;font-weight:600;margin:20px 0;color:whitesmoke;}
+
+/* Chatbot */
+#chatbotBtn{position:fixed;bottom:20px;right:20px;background:#0ea5e9;color:#fff;border:none;border-radius:50%;width:60px;height:60px;font-size:28px;cursor:pointer;z-index:1000;}
+#chatWindow{position:fixed;bottom:90px;right:20px;width:300px;max-height:400px;background:#1e293b;color:#fff;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.3);display:none;flex-direction:column;overflow:hidden;z-index:1000;}
+#chatHeader{background:#0ea5e9;padding:10px;text-align:center;font-weight:bold;}
+#chatMessages{flex:1;padding:10px;overflow-y:auto;}
+.message{margin-bottom:10px;padding:6px 10px;border-radius:8px;max-width:80%;word-wrap:break-word;}
+.bot{background:#38bdf8;color:#000;align-self:flex-start;}
+.user{background:#22c55e;color:#fff;align-self:flex-end;text-align:right;}
+#chatInputArea{display:flex;border-top:1px solid #ccc;}
+#chatInput{flex:1;padding:8px;border:none;outline:none;}
+#sendBtn{padding:8px 12px;background:#0ea5e9;border:none;color:#fff;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📘 LearnHub</div>
+  <nav>
+    <ul>
+      <li><a href="#" class="nav-btn" data-section="messagesSection">Messages</a></li>
+      <li><a href="#" class="nav-btn" data-section="eventsSection">Events</a></li>
+      <li><a href="#" class="nav-btn" data-section="leaderboardSection">Leaderboard</a></li>
+      <li><a href="#" class="nav-btn" data-section="forumSection">Forum</a></li>
+      <li><button id="logoutBtn">Logout</button></li>
+    </ul>
+  </nav>
+</header>
+
+<div id="welcome-msg"></div>
+
+<!-- Sections -->
+<div class="section" id="messagesSection">
+  <h2>Messages from Admin</h2>
+  <div id="messagesList"></div>
+</div>
+
+<div class="section" id="eventsSection">
+  <h2>Upcoming Events</h2>
+  <div id="eventsList"></div>
+</div>
+
+<div class="section" id="leaderboardSection">
+  <h2>Leaderboard</h2>
+  <div id="leaderboardList"></div>
+</div>
+
+<div class="section" id="forumSection">
+  <h2>Discussion Forum</h2>
+  <div id="forumList"></div>
+  <div style="margin-top:10px;">
+    <input type="text" id="postInput" placeholder="Write a question..." style="padding:8px;width:70%;">
+    <button id="postBtn">Post</button>
+  </div>
+</div>
+
+<!-- Chatbot -->
+<button id="chatbotBtn">💬</button>
+<div id="chatWindow">
+  <div id="chatHeader">LearnHub Bot</div>
+  <div id="chatMessages"></div>
+  <div id="chatInputArea">
+    <input type="text" id="chatInput" placeholder="Ask me about a section...">
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+// ===== Personalized Welcome =====
+const currentUser = localStorage.getItem('currentUser');
+const welcomeMsg = document.getElementById('welcome-msg');
+let displayName = 'Student';
+if(currentUser){
+  const userData = JSON.parse(localStorage.getItem('user_' + currentUser));
+  if(userData){ displayName = userData.name; welcomeMsg.textContent = `Welcome back, ${displayName}!`; }
+}
+
+// ===== Logout =====
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  localStorage.removeItem('currentUser');
+  window.location.href='login.html';
+});
+
+// ===== Navigation =====
+const navButtons = document.querySelectorAll('.nav-btn');
+const sections = document.querySelectorAll('.section');
+navButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    navButtons.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    sections.forEach(sec=>sec.classList.remove('active'));
+    document.getElementById(btn.dataset.section).classList.add('active');
+  });
+});
+// Show first section by default
+document.getElementById('messagesSection').classList.add('active');
+
+// ===== Dummy Data =====
+const messages = [{from:"Admin",text:"Welcome to LearnHub!",ts:Date.now()}];
+const events = [{title:"Math Test",date:"2025-09-30"},{title:"Science Test",date:"2025-10-05"}];
+const leaderboard = [{name:"Alice",score:90},{name:"Bob",score:85}];
+const forum_posts = [{author:"Alice",text:"Any tips for math test?",ts:Date.now()}];
+
+// ===== Render Functions =====
+function renderMessages(){
+  const el = document.getElementById('messagesList');
+  el.innerHTML='';
+  messages.forEach(m=>{
+    const div = document.createElement('div');
+    div.textContent=`${m.from}: ${m.text}`;
+    div.className='list-item';
+    el.appendChild(div);
+  });
+}
+function renderEvents(){
+  const el = document.getElementById('eventsList');
+  el.innerHTML='';
+  events.forEach(e=>{
+    const div = document.createElement('div');
+    div.textContent=`${e.title} - ${new Date(e.date).toDateString()}`;
+    div.className='list-item';
+    el.appendChild(div);
+  });
+}
+function renderLeaderboard(){
+  const el = document.getElementById('leaderboardList');
+  el.innerHTML='';
+  leaderboard.forEach(u=>{
+    const div = document.createElement('div');
+    div.textContent=`${u.name} - ${u.score}`;
+    div.className='list-item';
+    el.appendChild(div);
+  });
+}
+function renderForum(){
+  const el = document.getElementById('forumList');
+  el.innerHTML='';
+  forum_posts.slice().reverse().forEach(p=>{
+    const div = document.createElement('div');
+    div.textContent=`${p.author}: ${p.text}`;
+    div.className='list-item';
+    el.appendChild(div);
+  });
+}
+renderMessages(); renderEvents(); renderLeaderboard(); renderForum();
+
+// ===== Forum Post =====
+document.getElementById('postBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('postInput');
+  const text = input.value.trim();
+  if(!text) return;
+  forum_posts.push({author:displayName,text,text,ts:Date.now()});
+  input.value='';
+  renderForum();
+});
+
+// ===== Chatbot =====
+const chatbotBtn = document.getElementById('chatbotBtn');
+const chatWindow = document.getElementById('chatWindow');
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+
+chatbotBtn.addEventListener('click', ()=>{
+  chatWindow.style.display = chatWindow.style.display==='flex'?'none':'flex';
+});
+
+function addMessage(text,sender){
+  const div = document.createElement('div');
+  div.className='message '+sender;
+  div.textContent=text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  if(sender==='bot' && 'speechSynthesis' in window){
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang='en-US';
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+function botResponse(input){
+  input = input.toLowerCase();
+  if(input.includes('events')){ showSection('eventsSection'); return 'This is the Events section. You can see upcoming tests and register for them.';}
+  if(input.includes('messages')){ showSection('messagesSection'); return 'This is the Messages section. You will see messages sent by your admin here.';}
+  if(input.includes('leaderboard')){ showSection('leaderboardSection'); return 'This is the Leaderboard. It shows the top students based on scores.';}
+  if(input.includes('forum')){ showSection('forumSection'); return 'This is the Forum section. You can discuss questions with your classmates here.';}
+  if(input.includes('help')) return 'Type: events, messages, leaderboard, forum to learn about each section.';
+  return 'I am not sure about that. Type "help" for guidance.';
+}
+
+function sendMessage(){
+  const text = chatInput.value.trim();
+  if(!text) return;
+  addMessage(text,'user');
+  chatInput.value='';
+  setTimeout(()=>addMessage(botResponse(text),'bot'),500);
+}
+
+sendBtn.addEventListener('click',sendMessage);
+chatInput.addEventListener('keypress',(e)=>{if(e.key==='Enter')sendMessage();});
+
+// Welcome bot message
+addMessage(`Hello ${displayName}! I am your LearnHub assistant. Type "help" to learn about each section.`,'bot');
+</script>
+</body>
+</html>

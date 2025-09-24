@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnHub - Student Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0ea5e9; --bg2:#1e293b;
+  --card:#0f172a; --accent:#0ea5e9; --accent-2:#38bdf8;
+  --muted:#cbd5e1;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,var(--bg1),#8b5cf6);color:#fff;padding:18px;}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+header h1{font-size:1.5rem;}
+button{padding:10px 12px;border-radius:8px;border:none;background:var(--accent);color:#012;cursor:pointer;font-weight:600;}
+button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff;}
+nav{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+nav button{padding:10px 15px;border:none;border-radius:6px;background:#38bdf8;color:#fff;cursor:pointer;font-weight:600;transition:0.3s;}
+nav button.active, nav button:hover{background:#0ea5e9;}
+.section{display:none;background:rgba(15,23,42,0.85);padding:20px;border-radius:12px;margin-bottom:20px;}
+.section.active{display:block;}
+.card{background:rgba(0,0,0,0.4);padding:20px;border-radius:14px;margin-bottom:20px;}
+.messages, .forum-list, .leaderboard-list, .event-list{max-height:300px;overflow:auto;padding:10px;border-radius:10px;background:rgba(0,0,0,0.15);margin-top:10px;}
+.message-item{padding:8px 10px;border-radius:8px;margin-bottom:8px;}
+.bot{background:#38bdf8;color:#000;align-self:flex-start;}
+.user{background:#22c55e;color:#fff;align-self:flex-end;text-align:right;}
+.input-area{display:flex;gap:10px;margin-top:10px;}
+.input-area input{flex:1;padding:8px;border-radius:6px;border:none;}
+#chatbotBtn{position:fixed;bottom:20px;right:20px;background:#0ea5e9;color:#fff;border:none;border-radius:50%;width:60px;height:60px;font-size:28px;cursor:pointer;z-index:1000;}
+#chatWindow{position:fixed;bottom:90px;right:20px;width:300px;max-height:400px;background:#1e293b;color:#fff;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.3);display:none;flex-direction:column;overflow:hidden;z-index:1000;}
+#chatHeader{background:#0ea5e9;padding:10px;text-align:center;font-weight:bold;}
+#chatMessages{flex:1;padding:10px;overflow-y:auto;}
+#chatInputArea{display:flex;border-top:1px solid #ccc;}
+#chatInput{flex:1;padding:8px;border:none;outline:none;}
+#sendBtn{padding:8px 12px;background:#0ea5e9;border:none;color:#fff;cursor:pointer;}
+#logoutBtn{background:#ef4444;color:#fff;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LearnHub - Student Dashboard</h1>
+  <button id="logoutBtn">Logout</button>
+</header>
+
+<!-- Personalized Welcome -->
+<div id="welcome-msg" style="text-align:center;font-size:1.5rem;font-weight:600;margin-bottom:20px;"></div>
+
+<!-- Navigation -->
+<nav>
+  <button class="nav-btn active" data-section="messagesSection">Messages</button>
+  <button class="nav-btn" data-section="eventsSection">Events</button>
+  <button class="nav-btn" data-section="leaderboardSection">Leaderboard</button>
+  <button class="nav-btn" data-section="forumSection">Forum</button>
+  <button class="nav-btn" data-section="subjectsSection">Subjects</button>
+  <button class="nav-btn" data-section="toolsSection">Tools</button>
+  <button class="nav-btn" data-section="pastQuestionsSection">Past Questions</button>
+  <button class="nav-btn" data-section="studentPortalSection">Student Portal</button>
+</nav>
+
+<!-- Sections -->
+<div class="section active" id="messagesSection">
+  <h2>Messages from Admin</h2>
+  <div class="messages" id="chatMessages"></div>
+</div>
+
+<div class="section" id="eventsSection">
+  <h2>Upcoming Tests & Registration</h2>
+  <div class="event-list" id="eventList"></div>
+</div>
+
+<div class="section" id="leaderboardSection">
+  <h2>Leaderboard</h2>
+  <div class="leaderboard-list" id="leaderboardList"></div>
+</div>
+
+<div class="section" id="forumSection">
+  <h2>Discussion Forum</h2>
+  <div class="forum-list" id="forumList"></div>
+  <div class="input-area">
+    <input type="text" id="postInput" placeholder="Write a question...">
+    <button id="postBtn">Post</button>
+  </div>
+</div>
+
+<div class="section" id="subjectsSection">
+  <h2>Subjects</h2>
+  <ul>
+    <li>Mathematics</li>
+    <li>Physics</li>
+    <li>Chemistry</li>
+    <li>Biology</li>
+    <li>English</li>
+  </ul>
+</div>
+
+<div class="section" id="toolsSection">
+  <h2>Tools</h2>
+  <p>Calculator, Reminders, Notes, etc.</p>
+  <button onclick="window.open('sss.html','_blank')">Open Tools</button>
+</div>
+
+<div class="section" id="pastQuestionsSection">
+  <h2>Past Questions</h2>
+  <p>Access previous exams for practice.</p>
+</div>
+
+<div class="section" id="studentPortalSection">
+  <h2>Student Portal</h2>
+  <p>Profile, registrations, and personalized data.</p>
+</div>
+
+<!-- Chatbot -->
+<button id="chatbotBtn">💬</button>
+<div id="chatWindow">
+  <div id="chatHeader">LearnHub Bot</div>
+  <div id="chatMessagesBot"></div>
+  <div id="chatInputArea">
+    <input type="text" id="chatInput" placeholder="Ask me about a section...">
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+// ===== Current User & Welcome =====
+const currentUser = localStorage.getItem('currentUser');
+const displayName = JSON.parse(localStorage.getItem('user_' + currentUser))?.name || currentUser;
+document.getElementById('welcome-msg').textContent = `Welcome back, ${displayName}!`;
+
+// ===== Logout =====
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  localStorage.removeItem('currentUser');
+  window.location.href='login.html';
+});
+
+// ===== Navigation =====
+const navButtons = document.querySelectorAll('.nav-btn');
+const sections = document.querySelectorAll('.section');
+navButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    navButtons.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    sections.forEach(sec=>sec.classList.remove('active'));
+    document.getElementById(btn.dataset.section).classList.add('active');
+  });
+});
+
+// ===== Messages =====
+const chatMessages = document.getElementById('chatMessages');
+function renderMessages(){
+  const messages = JSON.parse(localStorage.getItem('messages_' + currentUser) || '[]');
+  chatMessages.innerHTML='';
+  messages.forEach(m=>{
+    const div = document.createElement('div');
+    div.className='message-item '+(m.from==="Admin"?"bot":"user");
+    div.innerHTML=`<p>${m.text}</p><small>${m.from} • ${new Date(m.ts).toLocaleString()}</small>`;
+    chatMessages.appendChild(div);
+  });
+}
+renderMessages();
+
+// ===== Events =====
+let events = JSON.parse(localStorage.getItem('events')) || [
+  {id:1,title:"Math Test",date:"2025-09-30",registered:[]},
+  {id:2,title:"Science Test",date:"2025-10-05",registered:[]}
+];
+const eventListEl = document.getElementById('eventList');
+function renderEvents(){
+  eventListEl.innerHTML='';
+  events.forEach(ev=>{
+    const div = document.createElement('div');
+    const registered = ev.register

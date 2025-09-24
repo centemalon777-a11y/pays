@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Event Registrations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e293b, #0ea5e9);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-size: 2rem; color: #38bdf8; }
+
+    .events-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    .event-card {
+      background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .event-date { font-size: 1rem; font-weight: 600; color: #0ea5e9; margin-bottom: 5px; }
+    .event-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 12px; }
+    .student-list { margin-top: 10px; }
+    .student-item {
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .no-students { color:#cbd5e1; margin-top: 5px; }
+
+    .message-box {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    .message-box input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.95rem;
+    }
+    .message-box button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .message-box button:hover { background: #38bdf8; }
+
+    footer { text-align: center; margin-top: 40px; font-size: 0.9rem; color: #cbd5e1; }
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #0ea5e9;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+    .back-link:hover { background: #38bdf8; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📋 Admin Panel - Event Registrations</h1>
+  <p>View all students and send them messages</p>
+</header>
+
+<section class="events-container" id="admin-events"></section>
+<a href="er.html" class="back-link">← Back to Dashboard</a>
+
+<footer>
+  <p>© 2025 LearnHub. All Rights Reserved.</p>
+</footer>
+
+<script>
+  // Example events
+  const events = [
+    { id: 1, date: "2025-10-05", title: "Science Fair" },
+    { id: 2, date: "2025-10-12", title: "Math Competition" },
+    { id: 3, date: "2025-10-20", title: "Cultural Day" },
+    { id: 4, date: "2025-11-01", title: "First Term Exams" }
+  ];
+
+  const adminEvents = document.getElementById("admin-events");
+
+  function loadAllRegistrations() {
+    let allRegistrations = [];
+
+    // Loop through all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("registeredEvents_")) {
+        const registrations = JSON.parse(localStorage.getItem(key)) || [];
+        // Attach email (from key) to each registration
+        const email = key.replace("registeredEvents_", "");
+        registrations.forEach(r => r.email = email);
+        allRegistrations = allRegistrations.concat(registrations);
+      }
+    }
+    return allRegistrations;
+  }
+
+  function sendMessageToStudents(students, message, eventTitle) {
+    students.forEach(s => {
+      const key = "messages_" + s.email;
+      const prevMessages = JSON.parse(localStorage.getItem(key)) || [];
+      prevMessages.push({
+        from: "Admin",
+        event: eventTitle,
+        text: message,
+        time: new Date().toLocaleString()
+      });
+      localStorage.setItem(key, JSON.stringify(prevMessages));
+    });
+    alert("Message sent to all registered students of " + eventTitle);
+  }
+
+  function renderAdminView() {
+    const allRegistrations = loadAllRegistrations();
+    adminEvents.innerHTML = "";
+
+    events.forEach(event => {
+      const div = document.createElement("div");
+      div.className = "event-card";
+
+      div.innerHTML = `
+        <div class="event-date">${new Date(event.date).toDateString()}</div>
+        <div class="event-title">${event.title}</div>
+        <div class="student-list"></div>
+      `;
+
+      const studentList = div.querySelector(".student-list");
+
+      // Filter students for this event
+      const students = allRegistrations.filter(r => r.id === event.id);
+
+      if (students.length > 0) {
+        students.forEach(s => {
+          const p = document.createElement("div");
+          p.className = "student-item";
+          p.textContent = `${s.name} (Class: ${s.className}, Email: ${s.email})`;
+          studentList.appendChild(p);
+        });
+
+        // Add message box
+        const msgBox = document.createElement("div");
+        msgBox.className = "message-box";
+        msgBox.innerHTML = `
+          <input type="text" placeholder="Write a message to all students of ${event.title}">
+          <button>Send</button>
+        `;
+        const input = msgBox.querySelector("input");
+        const btn = msgBox.querySelector("button");
+        btn.addEventListener("click", () => {
+          if (input.value.trim()) {
+            sendMessageToStudents(students, input.value.trim(), event.title);
+            input.value = "";
+          }
+        });
+        div.appendChild(msgBox);
+
+      } else {
+        studentList.innerHTML = `<p class="no-students">No students registered yet.</p>`;
+      }
+
+      adminEvents.appendChild(div);
+    });
+  }
+
+  renderAdminView();
+</script>
+
+</body>
+</html>

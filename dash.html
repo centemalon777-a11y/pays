@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnHub - Professional Homepage</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+body { background: linear-gradient(135deg,#0ea5e9,#1e293b); color:#fff; padding:20px; }
+
+.container { max-width:1200px; margin:0 auto; }
+
+/* Welcome Section */
+#welcome { text-align:center; font-size:1.8rem; margin-bottom:40px; color:#38bdf8; }
+
+/* Section Titles */
+.section-title { font-size:1.6rem; margin:20px 0; color:#38bdf8; border-bottom:2px solid #38bdf8; display:inline-block; padding-bottom:5px; }
+
+/* Grid Layout */
+.grid-container { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
+
+/* Cards */
+.card { background:rgba(30,41,59,0.85); padding:20px; border-radius:15px; box-shadow:0 5px 20px rgba(0,0,0,0.3); transition:0.3s; }
+.card:hover { transform:translateY(-5px); box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+.card h3 { color:#0ea5e9; margin-bottom:10px; }
+.card p { color:#cbd5e1; font-size:0.95rem; }
+
+/* Buttons */
+.register-btn, .forum-btn { padding:10px 20px; border:none; border-radius:8px; background:#0ea5e9; color:#fff; font-weight:600; cursor:pointer; transition:0.3s; }
+.register-btn:hover, .forum-btn:hover { background:#38bdf8; }
+.register-btn.registered { background:#22c55e; cursor:default; }
+
+/* Event Registration Form */
+.register-form { margin-top:15px; display:none; flex-direction:column; gap:10px; }
+.register-form input { padding:10px; border-radius:6px; border:none; font-size:0.95rem; }
+
+/* Forum Messages */
+#forum-messages { max-height:200px; overflow-y:auto; background:#f1f5f9; color:#000; padding:10px; border-radius:10px; margin-bottom:10px; }
+#forum-input { padding:10px; width:100%; border-radius:8px; border:1px solid #ccc; margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Welcome -->
+  <div id="welcome"></div>
+
+  <!-- Subjects Section -->
+  <section id="subjects">
+    <h2 class="section-title">Subjects & Topics</h2>
+    <div class="grid-container" id="subject-grid"></div>
+  </section>
+
+  <!-- Upcoming Events Section -->
+  <section id="events">
+    <h2 class="section-title">Upcoming Events</h2>
+    <div class="grid-container" id="events-list"></div>
+  </section>
+
+  <!-- Forum Section -->
+  <section id="forum">
+    <h2 class="section-title">Student Forum</h2>
+    <div class="forum-card card">
+      <div id="forum-messages"></div>
+      <input type="text" id="forum-input" placeholder="Type your message...">
+      <button id="forum-send-btn" class="forum-btn">Send</button>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---------------------------
+// USER DATA
+// ---------------------------
+const currentUserEmail = localStorage.getItem('currentUser');
+const currentUserData = JSON.parse(localStorage.getItem('user_' + currentUserEmail));
+const currentUserName = currentUserData?.name || "Guest";
+document.getElementById('welcome').textContent = `👋 Welcome back, ${currentUserName}!`;
+
+// ---------------------------
+// SUBJECTS
+// ---------------------------
+const subjects = {
+  "Science":[{name:"Physics",desc:"Learn about motion, energy, force, and matter."},{name:"Chemistry",desc:"Explore elements, compounds, and reactions."},{name:"Biology",desc:"Study life, plants, animals, and human body."}],
+  "Art":[{name:"Drawing",desc:"Learn sketching, shading, and techniques."},{name:"Painting",desc:"Explore watercolor, acrylic, and oils."},{name:"Music",desc:"Understand melody, rhythm, and instruments."}],
+  "Commercial":[{name:"Business",desc:"Learn management, entrepreneurship, and trade."},{name:"Accounting",desc:"Study financial statements and bookkeeping."},{name:"Economics",desc:"Understand markets, supply, and demand."}]
+};
+const subjectGrid = document.getElementById('subject-grid');
+Object.keys(subjects).forEach(subject=>{
+  const div=document.createElement('div');
+  div.className='card';
+  div.innerHTML=`<h3>${subject}</h3><p>Click to explore topics</p>`;
+  div.addEventListener('click',()=>{ alert(`${subject} topics: ${subjects[subject].map(t=>t.name).join(", ")}`); });
+  subjectGrid.appendChild(div);
+});
+
+// ---------------------------
+// EVENTS
+// ---------------------------
+const events = [
+  { id: 1, date: "2025-10-05", title: "Science Fair", desc: "An exhibition showcasing student science projects." },
+  { id: 2, date: "2025-10-12", title: "Math Competition", desc: "Inter-school quiz competition on mathematics." },
+  { id: 3, date: "2025-10-20", title: "Cultural Day", desc: "A celebration of art, music, and cultural heritage." }
+];
+let registeredEvents = JSON.parse(localStorage.getItem('registeredEvents_' + currentUserEmail)) || [];
+const eventsList = document.getElementById('events-list');
+
+function renderEvents() {
+  eventsList.innerHTML='';
+  events.forEach(event=>{
+    const div=document.createElement('div');
+    div.className='card';
+    const registered = registeredEvents.find(e=>e.id===event.id);
+    div.innerHTML=`
+      <div><b>${event.title}</b></div>
+      <div>${event.desc}</div>
+      <div>${new Date(event.date).toDateString()}</div>
+      <button class="register-btn ${registered?'registered':''}">${registered?'✅ Registered':'Register'}</button>
+      <div class="register-form">
+        <input type="text" placeholder="Enter your name" class="name-input">
+        <input type="text" placeholder="Enter your class" class="class-input">
+        <button class="confirm-btn">Confirm</button>
+      </div>
+    `;
+    const btn = div.querySelector('.register-btn');
+    const form = div.querySelector('.register-form');
+    const confirmBtn = div.querySelector('.confirm-btn');
+    const nameInput = div.querySelector('.name-input');
+    const classInput = div.querySelector('.class-input');
+    if(!registered){
+      btn.addEventListener('click',()=>{ form.style.display='flex'; });
+      confirmBtn.addEventListener('click',()=>{
+        const name = nameInput.value.trim();
+        const className = classInput.value.trim();
+        if(name && className){
+          registeredEvents.push({id:event.id,name,className});
+          localStorage.setItem('registeredEvents_'+currentUserEmail,JSON.stringify(registeredEvents));
+          renderEvents();
+        } else { alert("Please enter name & class"); }
+      });
+    } else {
+      div.innerHTML+=`<p style="color:#22c55e;">Registered as: <b>${registered.name}</b> (Class: ${registered.className})</p>`;
+    }
+    eventsList.appendChild(div);
+  });
+}
+renderEvents();
+
+// ---------------------------
+// STUDENT FORUM
+// ---------------------------
+let forumMessages = JSON.parse(localStorage.getItem('forumMessages')) || [];
+const forumMessagesContainer = document.getElementById('forum-messages');
+const forumInput = document.getElementById('forum-input');
+const forumSendBtn = document.getElementById('forum-send-btn');
+
+function renderForumMessages(){
+  forumMessagesContainer.innerHTML='';
+  forumMessages.forEach(msg=>{
+    const div=document.createElement('div');
+    div.style.padding='8px'; div.style.marginBottom='6px'; div.style.background='#e0f2fe'; div.style.borderRadius='6px';
+    div.innerHTML=`<b>${msg.user}</b>: ${msg.text} <small style="float:right;font-size:0.75rem;color:#64748b;">${msg.time}</small>`;
+    forumMessagesContainer.appendChild(div);
+  });
+  forumMessagesContainer.scrollTop = forumMessagesContainer.scrollHeight;
+}
+forumSendBtn.addEventListener('click',()=>{
+  const text=forumInput.value.trim();
+  if(text==='') return;
+  const msg={user:currentUserName,text,time:new Date().toLocaleTimeString()};
+  forumMessages.push(msg);
+  localStorage.setItem('forumMessages',JSON.stringify(forumMessages));
+  forumInput.value='';
+  renderForumMessages();
+});
+renderForumMessages();
+</script>
+</body>
+</html>

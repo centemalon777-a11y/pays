@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Registered Events - LearnHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0ea5e9, #1e293b);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-size: 2rem; color: #38bdf8; }
+
+    .events-container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .event-card {
+      background: rgba(0,0,0,0.4);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .event-date { font-size: 1rem; font-weight: 600; color: #0ea5e9; margin-bottom: 5px; }
+    .event-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    .event-desc { font-size: 0.95rem; color: #e2e8f0; margin-bottom: 10px; }
+    .student-info { font-size: 0.95rem; color: #22c55e; font-weight: 600; }
+
+    .no-events {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #e2e8f0;
+      margin-top: 50px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #0ea5e9;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+    .back-link:hover { background: #38bdf8; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎟️ My Registered Events</h1>
+  <p>Here are the events you have registered for</p>
+</header>
+
+<section class="events-container" id="my-events-list"></section>
+
+<div style="text-align:center;">
+  <a href="up.html" class="back-link">← Back to Events</a>
+   <a href="all.html" class="back-link">← Back to All Registrations</a>
+</div>
+
+<script>
+  // Load registered events from localStorage
+  let registeredEvents = JSON.parse(localStorage.getItem("registeredEvents")) || [];
+
+  // Load all available events (should match the events list on events page)
+  const allEvents = [
+    { id: 1, date: "2025-10-05", title: "Science Fair", desc: "An exhibition showcasing student science projects." },
+    { id: 2, date: "2025-10-12", title: "Math Competition", desc: "Inter-school quiz competition on mathematics." },
+    { id: 3, date: "2025-10-20", title: "Cultural Day", desc: "A celebration of art, music, and cultural heritage." },
+    { id: 4, date: "2025-11-01", title: "First Term Exams", desc: "Examinations for all classes will begin." }
+  ];
+
+  const eventsList = document.getElementById("my-events-list");
+
+  function renderMyEvents() {
+    if (registeredEvents.length === 0) {
+      eventsList.innerHTML = `<p class="no-events">❌ You have not registered for any event yet.</p>`;
+      return;
+    }
+
+    eventsList.innerHTML = "";
+    registeredEvents.forEach(reg => {
+      const event = allEvents.find(e => e.id === reg.id);
+      if (event) {
+        const div = document.createElement("div");
+        div.className = "event-card";
+        div.innerHTML = `
+          <div class="event-date">${new Date(event.date).toDateString()}</div>
+          <div class="event-title">${event.title}</div>
+          <div class="event-desc">${event.desc}</div>
+          <p class="student-info">👤 Registered as: <b>${reg.name}</b> (Class: ${reg.className})</p>
+        `;
+        eventsList.appendChild(div);
+      }
+    });
+  }
+
+  renderMyEvents();
+</script>
+
+</body>
+</html>

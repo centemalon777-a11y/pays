@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Event Registrations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e293b, #0ea5e9);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    header { text-align: center; margin-bottom: 30px; }
+    header h1 { font-size: 2rem; color: #38bdf8; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #0ea5e9;
+      color: #fff;
+    }
+    tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+    tr:hover { background: rgba(255,255,255,0.1); }
+
+    .filter {
+      margin: 10px 0;
+      display: flex;
+      gap: 10px;
+    }
+    select, button {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #38bdf8; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #0ea5e9;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+    .back-link:hover { background: #38bdf8; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Admin Panel - Event Registrations</h1>
+  <p>View all students who registered for upcoming events</p>
+</header>
+
+<div class="filter">
+  <select id="eventFilter">
+    <option value="all">All Events</option>
+  </select>
+  <button onclick="applyFilter()">Filter</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Student Name</th>
+      <th>Class</th>
+      <th>Event</th>
+      <th>Date</th>
+      <th>Username</th>
+    </tr>
+  </thead>
+  <tbody id="registrationTable"></tbody>
+</table>
+
+<a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+
+<script>
+ const currentUser = localStorage.getItem('currentUser');
+const displayName = localStorage.getItem('user_' + currentUser) || currentUser;
+document.getElementById('profileName').textContent = displayName;
+document.getElementById('profileEmail').textContent = currentUser;
+document.getElementById('avatar').textContent = displayName[0].toUpperCase();
+
+document.getElementById('editProfileBtn').addEventListener('click', ()=>{
+  const newName = prompt('Enter new display name:', displayName);
+  if(newName){
+    localStorage.setItem('user_' + currentUser, newName);
+    location.reload();
+  }
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  localStorage.removeItem('currentUser');
+  window.location.href = 'login.html';
+});
+
+  // Load all registrations from localStorage
+  function loadAllRegistrations() {
+    const registrations = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("registeredEvents_")) {
+        const username = key.replace("registeredEvents_", "");
+        const userEvents = JSON.parse(localStorage.getItem(key)) || [];
+        userEvents.forEach(reg => {
+          const event = events.find(e => e.id === reg.id);
+          registrations.push({
+            user: username,
+            name: reg.name,
+            className: reg.className,
+            eventTitle: event ? event.title : "Unknown",
+            eventDate: event ? new Date(event.date).toDateString() : "Unknown"
+          });
+        });
+      }
+    }
+    return registrations;
+  }
+
+  // Fill event filter options
+  events.forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = e.title;
+    opt.textContent = e.title;
+    eventFilter.appendChild(opt);
+  });
+
+  function renderTable(filter="all") {
+    const allRegs = loadAllRegistrations();
+    tableBody.innerHTML = "";
+
+    allRegs
+      .filter(r => filter === "all" || r.eventTitle === filter)
+      .forEach(r => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${r.name}</td>
+          <td>${r.className}</td>
+          <td>${r.eventTitle}</td>
+          <td>${r.eventDate}</td>
+          <td>${r.user}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+  }
+
+  function applyFilter() {
+    const selected = eventFilter.value;
+    renderTable(selected);
+  }
+
+  // Initial render
+  renderTable();
+</script>
+
+</body>
+</html>

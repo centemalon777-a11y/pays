@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register for Upcoming Tests — LearnHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #0ea5e9, #1e293b);
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 20px;
+  background: rgba(0,0,0,0.4);
+}
+header h1 { font-size:1.8rem; color:#38bdf8; }
+header button { padding:8px 12px; border:none; border-radius:8px; background:#22c55e; color:#fff; cursor:pointer; }
+
+.container { max-width:600px; margin:30px auto; background:rgba(0,0,0,0.25); padding:20px; border-radius:12px; }
+form { display:flex; flex-direction:column; gap:15px; }
+input, select { padding:12px; border-radius:8px; border:none; font-size:1rem; }
+button.submit-btn { padding:12px; border:none; border-radius:8px; background:#0ea5e9; color:#fff; font-weight:600; cursor:pointer; }
+button.submit-btn:hover { background:#38bdf8; }
+
+h2 { margin-bottom:15px; color:#38bdf8; }
+.registration-list { margin-top:20px; max-height:300px; overflow:auto; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; }
+.registration-list div { padding:8px; border-bottom:1px solid rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Register for Upcoming Tests</h1>
+  <button id="backBtn">Back</button>
+</header>
+
+<div class="container">
+  <h2>Register Now</h2>
+  <form id="testForm">
+    <input type="text" id="studentName" placeholder="Enter your name" required>
+    <select id="subjectSelect" required>
+      <option value="">Select Subject</option>
+      <option value="Mathematics">Mathematics</option>
+      <option value="Science">Science</option>
+      <option value="English">English</option>
+      <option value="History">History</option>
+    </select>
+    <button type="submit" class="submit-btn">Register</button>
+  </form>
+
+  <div class="registration-list" id="registrationList">
+    <h3>Registered Students</h3>
+  </div>
+</div>
+
+<script>
+// Go back to student dashboard
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  window.location.href = 'student.html';
+});
+
+// Current user
+const currentUser = localStorage.getItem('currentUser');
+if(!currentUser) window.location.href='index.html';
+
+// Load existing registrations
+let registrations = JSON.parse(localStorage.getItem('testRegistrations_'+currentUser) || '[]');
+
+// Render registration list
+const registrationListEl = document.getElementById('registrationList');
+function renderRegistrations(){
+  registrationListEl.innerHTML = '<h3>Registered Students</h3>';
+  registrations.forEach(r=>{
+    const div = document.createElement('div');
+    div.textContent = `${r.name} - ${r.subject}`;
+    registrationListEl.appendChild(div);
+  });
+}
+renderRegistrations();
+
+// Handle form submission
+document.getElementById('testForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('studentName').value.trim();
+  const subject = document.getElementById('subjectSelect').value;
+
+  if(name && subject){
+    registrations.push({name, subject, ts: Date.now()});
+    localStorage.setItem('testRegistrations_'+currentUser, JSON.stringify(registrations));
+    alert(`Successfully registered for ${subject}`);
+    document.getElementById('testForm').reset();
+    renderRegistrations();
+
+    // Send notification to admin
+    const adminNotices = JSON.parse(localStorage.getItem('adminTestNotices') || '[]');
+    adminNotices.push({student: name, subject, ts: Date.now()});
+    localStorage.setItem('adminTestNotices', JSON.stringify(adminNotices));
+  } else {
+    alert('Please fill in all fields');
+  }
+});
+</script>
+
+</body>
+</html>

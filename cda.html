@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Event Registrations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e293b, #0ea5e9);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    header { text-align: center; margin-bottom: 30px; }
+    header h1 { font-size: 2rem; color: #38bdf8; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #0ea5e9;
+      color: #fff;
+    }
+    tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+    tr:hover { background: rgba(255,255,255,0.1); }
+
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #0ea5e9;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #38bdf8; }
+
+    .filter {
+      margin: 10px 0;
+      display: flex;
+      gap: 10px;
+    }
+    select {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #0ea5e9;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+    .back-link:hover { background: #38bdf8; }
+
+    /* Popup modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+      text-align: center;
+    }
+    .modal-content h2 { margin-bottom: 15px; }
+    textarea {
+      width: 100%;
+      height: 100px;
+      border-radius: 6px;
+      border: none;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-family: 'Poppins', sans-serif;
+      resize: none;
+    }
+    .modal-content button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Admin Panel - Event Registrations</h1>
+  <p>View all students and send them messages</p>
+</header>
+
+<div class="filter">
+  <select id="eventFilter">
+    <option value="all">All Events</option>
+  </select>
+  <button onclick="applyFilter()">Filter</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Student Name</th>
+      <th>Class</th>
+      <th>Event</th>
+      <th>Date</th>
+      <th>Username</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="registrationTable"></tbody>
+</table>
+
+<a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+
+<!-- Popup modal -->
+<div class="modal" id="messageModal">
+  <div class="modal-content">
+    <h2>Send Message</h2>
+    <p id="targetStudent"></p>
+    <textarea id="adminMessage" placeholder="Write your message..."></textarea>
+    <br>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+  // Example events
+  const events = [
+    { id: 1, date: "2025-10-05", title: "Science Fair" },
+    { id: 2, date: "2025-10-12", title: "Math Competition" },
+    { id: 3, date: "2025-10-20", title: "Cultural Day" },
+    { id: 4, date: "2025-11-01", title: "First Term Exams" }
+  ];
+
+  const tableBody = document.getElementById("registrationTable");
+  const eventFilter = document.getElementById("eventFilter");
+  const modal = document.getElementById("messageModal");
+  const targetStudent = document.getElementById("targetStudent");
+  const adminMessage = document.getElementById("adminMessage");
+
+  let selectedUser = "";
+
+  function loadAllRegistrations() {
+    const registrations = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("registeredEvents_")) {
+        const username = key.replace("registeredEvents_", "");
+        const userEvents = JSON.parse(localStorage.getItem(key)) || [];
+        userEvents.forEach(reg => {
+          const event = events.find(e => e.id === reg.id);
+          registrations.push({
+            user: username,
+            name: reg.name,
+            className: reg.className,
+            eventTitle: event ? event.title : "Unknown",
+            eventDate: event ? new Date(event.date).toDateString() : "Unknown"
+          });
+        });
+      }
+    }
+    return registrations;
+  }
+
+  events.forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = e.title;
+    opt.textContent = e.title;
+    eventFilter.appendChild(opt);
+  });
+
+  function renderTable(filter="all") {
+    const allRegs = loadAllRegistrations();
+    tableBody.innerHTML = "";
+
+    allRegs
+      .filter(r => filter === "all" || r.eventTitle === filter)
+      .forEach(r => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${r.name}</td>
+          <td>${r.className}</td>
+          <td>${r.eventTitle}</td>
+          <td>${r.eventDate}</td>
+          <td>${r.user}</td>
+          <td><button onclick="openModal('${r.user}')">Message</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+  }
+
+  function applyFilter() {
+    const selected = eventFilter.value;
+    renderTable(selected);
+  }
+
+  function openModal(user) {
+    selectedUser = user;
+    targetStudent.textContent = "To: " + user;
+    adminMessage.value = "";
+    modal.style.display = "flex";
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+  }
+
+  function sendMessage() {
+    const msg = adminMessage.value.trim();
+    if (!msg) return alert("Message cannot be empty!");
+
+    let inbox = JSON.parse(localStorage.getItem("messages_" + selectedUser)) || [];
+    inbox.push({ from: "Admin", text: msg, time: new Date().toLocaleString() });
+    localStorage.setItem("messages_" + selectedUser, JSON.stringify(inbox));
+
+    alert("Message sent to " + selectedUser);
+    closeModal();
+  }
+
+  renderTable();
+</script>
+
+</body>
+</html>

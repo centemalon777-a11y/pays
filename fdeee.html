@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Messaging - LearnHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg,#1e293b,#0ea5e9);
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+header {
+  padding: 15px 20px;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header h1 { font-size: 1.5rem; color: #38bdf8; }
+header button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #22c55e;
+  color: #fff;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+.student-select {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  width: 100%;
+}
+.messages {
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 15px;
+  height: 400px;
+  overflow-y: auto;
+}
+.msg {
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  max-width: 70%;
+  clear: both;
+}
+.msg.admin { background: #0ea5e9; float: left; text-align: left; }
+.msg.student { background: #22c55e; float: right; text-align: right; }
+.msg small { display: block; font-size: 0.75rem; margin-top: 4px; color: #e2e8f0; }
+
+.input-area {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.input-area input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+}
+.input-area button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #0ea5e9;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+.input-area button:hover { background: #38bdf8; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Admin Messaging</h1>
+  <button id="logoutBtn">Logout</button>
+</header>
+
+<div class="container">
+  <select class="student-select" id="studentSelect">
+    <option value="">-- Select Student --</option>
+  </select>
+
+  <div class="messages" id="chatMessages"></div>
+
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+// ===== Current Admin User =====
+const adminUser = 'Admin'; // you can add admin login later
+
+// ===== Load Registered Students =====
+const studentSelect = document.getElementById('studentSelect');
+function loadStudents() {
+  studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+  for (let key in localStorage) {
+    if(key.startsWith('user_')) {
+      const email = key.replace('user_','');
+      const name = localStorage.getItem(key);
+      studentSelect.innerHTML += `<option value="${email}">${name}</option>`;
+    }
+  }
+}
+loadStudents();
+
+// ===== Load Messages =====
+const chatMessages = document.getElementById('chatMessages');
+function loadMessages() {
+  const student = studentSelect.value;
+  if(!student) {
+    chatMessages.innerHTML = '<p style="text-align:center;color:#cbd5e1">Select a student to see messages.</p>';
+    return;
+  }
+  const messages = JSON.parse(localStorage.getItem('messages_' + student) || '[]');
+  chatMessages.innerHTML = '';
+  messages.forEach(msg => {
+    const div = document.createElement('div');
+    div.classList.add('msg', msg.from === 'Admin' ? 'admin' : 'student');
+    div.innerHTML = `<p>${msg.text}</p><small>${msg.from} • ${new Date(msg.ts).toLocaleString()}</small>`;
+    chatMessages.appendChild(div);
+  });
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ===== Student Selection Change =====
+studentSelect.addEventListener('change', loadMessages);
+
+// ===== Send Message =====
+document.getElementById('sendBtn').addEventListener('click', () => {
+  const student = studentSelect.value;
+  if(!student) return alert('Select a student first.');
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  const messages = JSON.parse(localStorage.getItem('messages_' + student) || '[]');
+  messages.push({from: 'Admin', text, ts: Date.now()});
+  localStorage.setItem('messages_' + student, JSON.stringify(messages));
+  input.value = '';
+  loadMessages();
+});
+
+// ===== Logout =====
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  window.location.href = 'admin-login.html';
+});
+</script>
+
+</body>
+</html>
